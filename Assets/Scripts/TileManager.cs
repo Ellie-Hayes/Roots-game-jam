@@ -1,11 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor.U2D;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using static TileData;
-using static UnityEditor.PlayerSettings;
 
 public class TileManager : MonoBehaviour
 {
@@ -67,6 +63,16 @@ public class TileManager : MonoBehaviour
     [Header("Misc")]
     MainManager mainManagerScript;
 
+    [Header("Audio")]
+    public AudioClip moveSound;
+    public AudioClip winLevelSound;
+    public AudioClip loseLevelSound;
+
+    [SerializeField]
+    AudioSource soundEffectSource;
+
+
+
     private void Awake()
     {
         dataFromTiles = new Dictionary<TileBase, TileData>();
@@ -99,6 +105,7 @@ public class TileManager : MonoBehaviour
                 currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 0);
                 currentDir = "down";
                 paintedTilemap.ClearAllTiles();
+                GetTileAmountSprite();
 
                 TilesPressed = 1;
                 LoadLevel();
@@ -115,10 +122,10 @@ public class TileManager : MonoBehaviour
     {
         if (pushing) { return; }
         
-        if (Input.GetKeyDown(KeyCode.W)) { newDir = "up"; currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 180); MoveRoot(0, 1); }
-        else if (Input.GetKeyDown(KeyCode.A)) { newDir = "left"; currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 270); MoveRoot(-1, 0); }
-        else if (Input.GetKeyDown(KeyCode.S)) { newDir = "down"; currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 0); MoveRoot(0, -1); }
-        else if (Input.GetKeyDown(KeyCode.D)) { newDir = "right"; currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 90); MoveRoot(1, 0);  }
+        if (Input.GetKeyDown(KeyCode.W)) { newDir = "up";  MoveRoot(0, 1); }
+        else if (Input.GetKeyDown(KeyCode.A)) { newDir = "left";  MoveRoot(-1, 0); }
+        else if (Input.GetKeyDown(KeyCode.S)) { newDir = "down"; MoveRoot(0, -1); }
+        else if (Input.GetKeyDown(KeyCode.D)) { newDir = "right";  MoveRoot(1, 0);  }
     }
 
     void MoveRoot(int directionX, int directionY)
@@ -152,16 +159,24 @@ public class TileManager : MonoBehaviour
             CheckTilePaint(paintPosition);
             TileBase paintedTile = map.GetTile(paintPosition);
             //dataFromTiles[paintedTile].SteppedOn = true;
-            
+            soundEffectSource.PlayOneShot(moveSound, 0.5F);
+
+            if (newDir == "up") { currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 180); }
+            else if (newDir == "left") { currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 270); }
+            else if (newDir == "down") { currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 0); }
+            else if (newDir == "right") { currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 90); }
+
             currentRootPosition.transform.position = newPosition;
             TilesPressed += 1;
 
             if (TilesPressed >= TotalTiles)
             {
                 currentLevel += 1;
+                soundEffectSource.PlayOneShot(winLevelSound, 0.8F);
                 newLevel();
             }
 
+            NutrientsTilemap.SetTile(gridPosition, null);
             if (EffectTilemap.GetTile(gridPosition) != null)
             {
                 TileBase EffectTile = EffectTilemap.GetTile(gridPosition);
@@ -177,11 +192,13 @@ public class TileManager : MonoBehaviour
             bool uhOh = CheckStuck();
             if (uhOh && !stallStuckCheck)
             {
+                soundEffectSource.PlayOneShot(loseLevelSound, 0.8F);
                 currentRootPosition.transform.position = startPosition;
                 currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 0);
                 currentDir = "down";
                 paintedTilemap.ClearAllTiles();
-                
+                GetTileAmountSprite();
+
                 TilesPressed = 1;
                 LoadLevel();
             }
@@ -243,15 +260,19 @@ public class TileManager : MonoBehaviour
                 break;
             case TileData.PushType.left:
                 direction = new Vector2(-1, 0);
+                newDir = "left";
                 break;
             case TileData.PushType.right:
                 direction = new Vector2(1, 0);
+                newDir = "right";
                 break;
             case TileData.PushType.up:
                 direction = new Vector2(0, 1);
+                newDir = "up";
                 break;
             case TileData.PushType.down:
                 direction = new Vector2(0, -1);
+                newDir = "down";
                 break;
             case TileData.PushType.none:
                 break;
@@ -268,7 +289,7 @@ public class TileManager : MonoBehaviour
         pushing = true;
         while (pushing)
         {
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.2f);
             MoveRoot((int)direction.x, (int)direction.y);
         }
     }
@@ -291,6 +312,7 @@ public class TileManager : MonoBehaviour
         }
 
 
+        
 
         //Down
         newPosition = new Vector2(currentRootPosition.transform.position.x, currentRootPosition.transform.position.y + -1);
@@ -358,7 +380,7 @@ public class TileManager : MonoBehaviour
                 else
                 {
                     TotalTiles += 1;
-                    NutrientsTilemap.SetTile(pos, nutrientTile);
+                    //NutrientsTilemap.SetTile(pos, nutrientTile);
                 }
             }
         }
@@ -392,7 +414,8 @@ public class TileManager : MonoBehaviour
                        
                         currentRootPosition.transform.position = new Vector2(teleporter2Pos.x + 0.5f, teleporter2Pos.y + 0.5f);
                         Debug.Log("found teleporter");
-                        paintedTilemap.SetTile(teleporter1Pos, tileToPaint);
+                        //paintedTilemap.SetTile(teleporter1Pos, tileToPaint);
+                        CheckTilePaint(teleporter1Pos);
                         TilesPressed += 1;
                     }
 
@@ -405,7 +428,11 @@ public class TileManager : MonoBehaviour
         if (uhOh)
         {
             currentRootPosition.transform.position = startPosition;
+            currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 0);
+            currentDir = "down";
             paintedTilemap.ClearAllTiles();
+            GetTileAmountSprite();
+            soundEffectSource.PlayOneShot(loseLevelSound, 0.8F);
 
             TilesPressed = 1;
             LoadLevel();
@@ -464,6 +491,8 @@ public class TileManager : MonoBehaviour
             currentRootPosition.transform.position = startPosition;
             currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 0);
             currentDir = "down";
+
+            
 
             TilesPressed = 1;
             SaveLevel();

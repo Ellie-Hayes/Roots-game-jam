@@ -4,6 +4,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using Newtonsoft.Json.Linq;
 
 public class MainManager : MonoBehaviour
 {
@@ -20,6 +21,10 @@ public class MainManager : MonoBehaviour
     public GameObject[] medals; //0 none, 1 bronxe, 2 silver, 3 gold
     Timer timerscript;
 
+    public AudioClip pausePop;
+
+    [SerializeField]
+    AudioSource soundEffectSource;
 
     // Start is called before the first frame update
     void Start()
@@ -32,15 +37,18 @@ public class MainManager : MonoBehaviour
     {
         if (won)
         {
-            timerscript.time = finalTime;
+            finalTime = timerscript.time;
             winCanvas.SetActive(true);
             DisplayTime(finalTime);
             GetMedal();
-            
+
+            PlayerPrefs.SetFloat("Highscore", finalTime);
+
         }
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
+            soundEffectSource.PlayOneShot(pausePop, 0.8F);
             paused = !paused;
             pausedCanvas.SetActive(!pausedCanvas.activeSelf);
         }
@@ -66,19 +74,20 @@ public class MainManager : MonoBehaviour
         {
             medals[1].SetActive(true);
             MedalText.text = "Bronze medal";
-            MedalDescription.text = "Not bad";
+            MedalDescription.text = "You were quicker than lily, but not quick enough. You were still pretty bad";
         }
-        else if (finalTime > 540) // 9 mins
+        else if (finalTime > 480) // 7 mins
         {
             medals[2].SetActive(true);
             MedalText.text = "Silver medal";
-            MedalDescription.text = "pretty good";
+            MedalDescription.text = "My hand cramps and I bet yours does too";
         }
         else
         {
             medals[3].SetActive(true);
             MedalText.text = "gold medal";
-            MedalDescription.text = "nice";
+            MedalDescription.text = "As my dad says, speedy gonzales";
         }
+
     }
 }
