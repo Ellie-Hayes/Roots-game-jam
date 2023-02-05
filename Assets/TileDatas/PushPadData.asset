@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PushPadData
   m_EditorClassIdentifier: 
   tiles:
-  - {fileID: 11400000, guid: db1dfbf99341864469165ee0b3edf1b6, type: 2}
+  - {fileID: 11400000, guid: ed8439beb3a3455489d8dd6639fb8515, type: 2}
   wall: 0
   type: 3
   pushType: 0

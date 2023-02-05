@@ -25,9 +25,13 @@ public class TileManager : MonoBehaviour
     [Header("PaintingTiles")]
     [SerializeField]
     Tile tileToPaint;
+    [SerializeField]
+    Tile[] tilesToPaint; 
 
     [SerializeField]
     Tilemap paintedTilemap;
+    string currentDir = "down";
+    string newDir; 
 
     [Header("Win Conditions")]
     [SerializeField]
@@ -35,9 +39,6 @@ public class TileManager : MonoBehaviour
     public int TotalTiles;
     public int TilesPressed = 1;
     bool won;
-
-    [SerializeField]
-    GameObject winCanvas;
 
     [Header("Nutrients Lol")]
     [SerializeField]
@@ -56,6 +57,16 @@ public class TileManager : MonoBehaviour
 
     bool stallStuckCheck;
 
+    [Header("New level")]
+    [SerializeField]
+    int currentLevel = 1;
+    [SerializeField]
+    GameObject[] levels;
+    public Camera MainCamera;
+
+    [Header("Misc")]
+    MainManager mainManagerScript;
+
     private void Awake()
     {
         dataFromTiles = new Dictionary<TileBase, TileData>();
@@ -71,16 +82,32 @@ public class TileManager : MonoBehaviour
         startPosition = currentRootPosition.transform.position;
         SaveLevel();
         GetTileAmountSprite();
+        mainManagerScript = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<MainManager>();
+       
     }
     void Update()
     {
-        CheckInput();
+        
 
-        if (won)
+        if (!mainManagerScript.paused)
         {
-            winCanvas.SetActive(true);
+            CheckInput();
+
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                currentRootPosition.transform.position = startPosition;
+                currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 0);
+                currentDir = "down";
+                paintedTilemap.ClearAllTiles();
+
+                TilesPressed = 1;
+                LoadLevel();
+            }
+
+            
         }
 
+       
 
     }
 
@@ -88,10 +115,10 @@ public class TileManager : MonoBehaviour
     {
         if (pushing) { return; }
         
-        if (Input.GetKeyDown(KeyCode.W)) { MoveRoot(0, 1); }
-        else if (Input.GetKeyDown(KeyCode.A)) { MoveRoot(-1, 0); }
-        else if (Input.GetKeyDown(KeyCode.S)) { MoveRoot(0, -1); }
-        else if (Input.GetKeyDown(KeyCode.D)) { MoveRoot(1, 0); }
+        if (Input.GetKeyDown(KeyCode.W)) { newDir = "up"; currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 180); MoveRoot(0, 1); }
+        else if (Input.GetKeyDown(KeyCode.A)) { newDir = "left"; currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 270); MoveRoot(-1, 0); }
+        else if (Input.GetKeyDown(KeyCode.S)) { newDir = "down"; currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 0); MoveRoot(0, -1); }
+        else if (Input.GetKeyDown(KeyCode.D)) { newDir = "right"; currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 90); MoveRoot(1, 0);  }
     }
 
     void MoveRoot(int directionX, int directionY)
@@ -122,7 +149,7 @@ public class TileManager : MonoBehaviour
         if (!dataFromTiles[TileToStepOn].wall && !paintedTilemap.HasTile(gridPosition) && !lockTileCheck)
         {
             Vector3Int paintPosition = map.WorldToCell(oldPosition);
-            TilePaint(paintPosition);
+            CheckTilePaint(paintPosition);
             TileBase paintedTile = map.GetTile(paintPosition);
             //dataFromTiles[paintedTile].SteppedOn = true;
             
@@ -131,8 +158,8 @@ public class TileManager : MonoBehaviour
 
             if (TilesPressed >= TotalTiles)
             {
-                Debug.Log("You win");
-                won = true;
+                currentLevel += 1;
+                newLevel();
             }
 
             if (EffectTilemap.GetTile(gridPosition) != null)
@@ -151,6 +178,8 @@ public class TileManager : MonoBehaviour
             if (uhOh && !stallStuckCheck)
             {
                 currentRootPosition.transform.position = startPosition;
+                currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 0);
+                currentDir = "down";
                 paintedTilemap.ClearAllTiles();
                 
                 TilesPressed = 1;
@@ -305,7 +334,7 @@ public class TileManager : MonoBehaviour
     }
 
     [ContextMenu("Paint")]
-    void TilePaint(Vector3Int positionToPaint)
+    void TilePaint(Vector3Int positionToPaint, Tile tileToPaint)
     {
         Debug.Log("Paimt!!");
         paintedTilemap.SetTile(positionToPaint, tileToPaint);
@@ -411,5 +440,69 @@ public class TileManager : MonoBehaviour
             EffectTilemap.SetTile(gridPos, tile);
 
         }
+    }
+
+    void newLevel()
+    {
+        if (currentLevel >= levels.Length + 1)
+        {
+            
+            mainManagerScript.won = true;
+        }
+        else
+        {
+            levels[currentLevel - 2].SetActive(false);
+            levels[currentLevel - 1].SetActive(true);
+            LevelData levelData = levels[currentLevel - 1].GetComponent<LevelData>();
+            map = levelData.dirtMap;
+            paintedTilemap = levelData.rootMap;
+            NutrientsTilemap = levelData.nutrientMap;
+            EffectTilemap = levelData.effectMap;
+            MainCamera.orthographicSize = levelData.cameraSize;
+
+            startPosition = levelData.startPos.transform.position;
+            currentRootPosition.transform.position = startPosition;
+            currentRootPosition.transform.rotation = Quaternion.Euler(0, 0, 0);
+            currentDir = "down";
+
+            TilesPressed = 1;
+            SaveLevel();
+            GetTileAmountSprite();
+        }
+       
+
+    }
+
+    void CheckTilePaint(Vector3Int pos)
+    {
+
+        Debug.Log(currentDir);
+        Debug.Log(newDir);
+        if ((currentDir == "down" && newDir == "down") || (currentDir == "up" && newDir == "up"))
+        {
+            TilePaint(pos, tilesToPaint[0]);
+        }
+        if ((currentDir == "left" && newDir == "left") || (currentDir == "right" && newDir == "right"))
+        {
+            TilePaint(pos, tilesToPaint[1]);
+        }
+        if ((currentDir == "up" && newDir == "right") || (currentDir == "left" && newDir == "down"))
+        {
+            TilePaint(pos, tilesToPaint[2]);
+        }
+        if ((currentDir == "right" && newDir == "down") || (currentDir == "up" && newDir == "left"))
+        {
+            TilePaint(pos, tilesToPaint[3]);
+        }
+        if ((currentDir == "left" && newDir == "up") || (currentDir == "down" && newDir == "right"))
+        {
+            TilePaint(pos, tilesToPaint[4]);
+        }
+        if ((currentDir == "right" && newDir == "up") || (currentDir == "down" && newDir == "left"))
+        {
+            TilePaint(pos, tilesToPaint[5]);
+        }
+
+        currentDir = newDir; 
     }
 }

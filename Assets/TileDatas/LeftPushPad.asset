@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: LeftPushPad
   m_EditorClassIdentifier: 
   tiles:
-  - {fileID: 11400000, guid: 77a40cbb6940b4546bc9d720f3ad4422, type: 2}
+  - {fileID: 11400000, guid: 22f336095916e084d98a29a50638a221, type: 2}
   wall: 0
   type: 3
   pushType: 1

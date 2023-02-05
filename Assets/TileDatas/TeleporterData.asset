@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: TeleporterData
   m_EditorClassIdentifier: 
   tiles:
-  - {fileID: 11400000, guid: 8efe6a88b818cdc48bbd268bb845d701, type: 2}
-  - {fileID: 11400000, guid: 4d44b4bc8793d77479857adabb81133a, type: 2}
+  - {fileID: 11400000, guid: b57a4a69a686ee24ca80ee735222a22e, type: 2}
+  - {fileID: 11400000, guid: 9e1e18775338a1545bed96d29e688987, type: 2}
+  - {fileID: 11400000, guid: 043c0c8007d6f2449aa26906861d6c96, type: 2}
   wall: 0
   type: 2
   pushType: 0

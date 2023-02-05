@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: LockData
   m_EditorClassIdentifier: 
   tiles:
-  - {fileID: 11400000, guid: 9f4fe56b81c557d4a90b00d4e39bd2f7, type: 2}
+  - {fileID: 11400000, guid: 4fd8799d65c74184599ba3cbf039be0c, type: 2}
   wall: 0
   type: 1
   pushType: 0

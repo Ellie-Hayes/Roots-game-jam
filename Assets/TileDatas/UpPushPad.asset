@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: UpPushPad
   m_EditorClassIdentifier: 
   tiles:
-  - {fileID: 11400000, guid: da06ef449e67d9c469a626cba84897ed, type: 2}
+  - {fileID: 11400000, guid: d5b15bde000fac8489f23a46f3983cbd, type: 2}
   wall: 0
   type: 3
   pushType: 3

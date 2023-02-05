@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: KeyData
   m_EditorClassIdentifier: 
   tiles:
-  - {fileID: 11400000, guid: 4ab5c60ef639afd4880432d4665cd4ed, type: 2}
+  - {fileID: 11400000, guid: 0c925feab77e5db4f9eaaf8f61694466, type: 2}
   wall: 0
   type: 0
   pushType: 0
